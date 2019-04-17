@@ -1,0 +1,70 @@
+---
+- hosts: aws
+  gather_facts: False
+  become: yes
+  user: root
+
+  vars:
+    ansible_python_interpreter: "/usr/bin/env python3"
+
+  tasks:
+
+  - name: "APT - Add Docker GPG key"
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: "APT - Add Docker repository"
+    apt_repository:
+      repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+      state: present
+      filename: docker
+
+  - name: "APT - install misc packages"
+    apt:
+      name: "{{ item }}"
+      update_cache: yes
+    with_items:
+      - "aptitude"
+      - "apt-transport-https"
+      - "ca-certificates"
+      - "curl"
+      - "software-properties-common"
+
+  - name: "APT - install 'docker-ce'"
+    apt:
+      name: "docker-ce"
+      update_cache: yes
+
+
+
+  - name: Install jq
+    apt: 
+      name: jq 
+      update_cache: yes
+
+    
+
+  - name: install docker-compose
+    become: yes
+    file: path=/usr/local/bin state=directory mode=0755
+
+  - name: get docker-compose url
+    shell: curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r '.assets[].browser_download_url | select(contains("Linux") and contains("x86_64"))' | head -1
+    register: url_info
+
+  - name: fetch docker-compose
+    become: yes
+    get_url: url="{{url_info.stdout}}" dest=/usr/local/bin/docker-compose mode=0755
+
+  - name: Git clone
+    git:
+     repo: https://github.com/yaroslavgrinev/simple-http-server-golang.git
+     version: master
+     dest: /home/ubuntu/repo
+  - name: run GO server
+    shell: "docker-compose -f /home/ubuntu/repo/docker-compose.yml up -d"
+
+       
+
+
