@@ -6,3 +6,4 @@
   a. after successfully terraform deploying into AWS, edit file host.txt (place new server public IP)
 5. Run playbook
    # ansible-playbook test_aws.yml
+After successfully deploy? check the results on page "http://AWS_PUBLIC_INSTANCE_IP:9000/ping"
